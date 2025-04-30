@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 238 80% 48%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 122 39% 49%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 36 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+  --chart-1: 238 80% 48%;
+  --chart-2: 122 39% 49%;
+  --chart-3: 36 100% 50%;
+  --chart-4: 0 84.2% 60.2%;
+  --chart-5: 280 60% 55%;
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 20 14.3% 4.1%;
+  --sidebar-primary: 238 80% 48%;
+  --sidebar-primary-foreground: 211 100% 99%;
+  --sidebar-accent: 36 100% 50%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 20 5.9% 90%;
+  --sidebar-ring: 20 14.3% 4.1%;
+  --pending: 0 84.2% 60.2%;
+  --under-review: 36 100% 50%;
+  --resolved: 122 39% 49%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 238 80% 48%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 122 39% 49%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 36 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --chart-1: 238 80% 48%;
+  --chart-2: 122 39% 49%;
+  --chart-3: 36 100% 50%;
+  --chart-4: 0 84.2% 60.2%;
+  --chart-5: 280 60% 55%;
+  --sidebar-background: 240 10% 3.9%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-primary: 238 80% 48%;
+  --sidebar-primary-foreground: 211 100% 99%;
+  --sidebar-accent: 36 100% 50%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 240 4.9% 83.9%;
+  --pending: 0 84.2% 60.2%;
+  --under-review: 36 100% 50%;
+  --resolved: 122 39% 49%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-neutral-100 text-neutral-400;
+  }
+}
+
+.drawer {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.drawer.open {
+  transform: translateX(0);
+}
