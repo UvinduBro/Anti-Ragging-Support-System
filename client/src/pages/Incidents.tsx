@@ -1,51 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertCircle,
-  Search,
-  X,
-  ZoomIn,
-  Share2,
-  Facebook,
-  Twitter,
-  Linkedin,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-
-import { useToast } from "@/hooks/use-toast";
-import apiRequest from "@/api";
+import { AlertCircle, Search } from "lucide-react";
 
 type Incident = {
   id: string;
-  incidentType: string;
+  type: string;
   description: string;
   location: string;
   date: string;
-  time?: string;
-  status: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  contactName?: string;
-  contactEmail?: string;
-  optionalContact?: boolean;
-  mediaBase64?: string[];
+  status: "pending" | "under-review" | "resolved";
 };
 
 export default function Incidents() {
@@ -53,31 +27,11 @@ export default function Incidents() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [universityFilter, setUniversityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
-    null
-  );
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  const getIncidents = async () => {
-    try {
-      const res = await apiRequest("GET", "/api/incidents");
-      setIncidents(res.data);
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch reports. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  useEffect(() => {
-    getIncidents();
-  }, []);
-
+  // This will be populated from Firebase in production
+  // Starting with an empty array for a fresh deployment
+  const incidents: Incident[] = [];
+  
   // Uncomment and modify the section below if you need sample data during development
   /*
   const incidents: Incident[] = [
@@ -107,7 +61,7 @@ export default function Incidents() {
     "Wayamba University",
     "Uva Wellassa University",
     "University of the Visual & Performing Arts",
-    "Other",
+    "Other"
   ];
 
   const incidentTypes = [
@@ -117,28 +71,22 @@ export default function Incidents() {
     "Discrimination",
     "Rights Violation",
     "Sexual Harassment",
-    "Other",
+    "Other"
   ];
 
   // Filter incidents based on search and filters
-  const filteredIncidents =
-    incidents?.filter((incident) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        incident.description
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        incident.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        incident.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesType = typeFilter === "all" || incident.incidentType === typeFilter;
-      const matchesUniversity =
-        universityFilter === "all" || incident.location === universityFilter;
-      const matchesStatus =
-        statusFilter === "all" || incident.status === statusFilter;
-
-      return matchesSearch && matchesType && matchesUniversity && matchesStatus;
-    }) || [];
+  const filteredIncidents = incidents.filter(incident => {
+    const matchesSearch = searchQuery === "" || 
+      incident.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      incident.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      incident.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesType = typeFilter === "all" || incident.type === typeFilter;
+    const matchesUniversity = universityFilter === "all" || incident.location === universityFilter;
+    const matchesStatus = statusFilter === "all" || incident.status === statusFilter;
+    
+    return matchesSearch && matchesType && matchesUniversity && matchesStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -161,10 +109,10 @@ export default function Incidents() {
                 placeholder="Search by description, ID, or location..."
                 className="pl-10"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-
+            
             <div className="flex flex-col sm:flex-row gap-2 w-full md:w-2/3">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-full sm:w-1/3">
@@ -173,30 +121,23 @@ export default function Incidents() {
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
                   {incidentTypes.map((type, idx) => (
-                    <SelectItem key={idx} value={type}>
-                      {type}
-                    </SelectItem>
+                    <SelectItem key={idx} value={type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-
-              <Select
-                value={universityFilter}
-                onValueChange={setUniversityFilter}
-              >
+              
+              <Select value={universityFilter} onValueChange={setUniversityFilter}>
                 <SelectTrigger className="w-full sm:w-1/3">
                   <SelectValue placeholder="Filter by university" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Universities</SelectItem>
                   {universities.map((uni, idx) => (
-                    <SelectItem key={idx} value={uni}>
-                      {uni}
-                    </SelectItem>
+                    <SelectItem key={idx} value={uni}>{uni}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-
+              
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-1/3">
                   <SelectValue placeholder="Filter by status" />
@@ -218,52 +159,43 @@ export default function Incidents() {
         {filteredIncidents.length > 0 ? (
           <div className="space-y-4">
             {filteredIncidents.map((incident) => (
-              <Link key={incident.id} href={`/incidents/${incident.id}`}>
-                <Card className="overflow-hidden cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col md:flex-row">
-                      <div className="p-6 flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
-                              {incident.incidentType.charAt(0).toUpperCase() + incident.incidentType.slice(1)}
-                            </h3>
-                            <p className="text-sm text-neutral-500">
-                              {incident.date} • {incident.location}
-                            </p>
-                          </div>
-                          <Badge
-                            className={
-                              incident.status === "resolved"
-                                ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                : incident.status === "under-review"
-                                ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
-                                : "bg-red-100 text-red-800 hover:bg-red-100"
-                            }
-                          >
-                            {incident.status === "resolved"
-                              ? "Resolved"
-                              : incident.status === "under-review"
-                              ? "Under Review"
-                              : "Pending"}
-                          </Badge>
+              <Card key={incident.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row">
+                    <div className="p-6 flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
+                            {incident.type}
+                          </h3>
+                          <p className="text-sm text-neutral-500">
+                            {incident.id} • {incident.date} • {incident.location}
+                          </p>
                         </div>
-                        <p className="text-neutral-600 dark:text-neutral-300 mt-2">
-                          {incident.description}
-                        </p>
+                        <Badge 
+                          className={
+                            incident.status === 'resolved' ? 'bg-green-100 text-green-800 hover:bg-green-100' :
+                            incident.status === 'under-review' ? 'bg-orange-100 text-orange-800 hover:bg-orange-100' :
+                            'bg-red-100 text-red-800 hover:bg-red-100'
+                          }
+                        >
+                          {incident.status === 'resolved' ? 'Resolved' : 
+                           incident.status === 'under-review' ? 'Under Review' : 'Pending'}
+                        </Badge>
                       </div>
+                      <p className="text-neutral-600 dark:text-neutral-300 mt-2">
+                        {incident.description}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
             <AlertCircle className="mx-auto h-12 w-12 text-neutral-400" />
-            <h3 className="mt-4 text-lg font-medium text-neutral-900 dark:text-neutral-50">
-              No incidents found
-            </h3>
+            <h3 className="mt-4 text-lg font-medium text-neutral-900 dark:text-neutral-50">No incidents found</h3>
             <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
               Try adjusting your search or filter criteria.
             </p>
@@ -271,198 +203,10 @@ export default function Incidents() {
         )}
       </div>
 
-      {/* Incident Details Modal */}
-      <Dialog
-        open={!!selectedIncident}
-        onOpenChange={() => setSelectedIncident(null)}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Incident Details</DialogTitle>
-            <DialogDescription>
-              Detailed information about the reported incident
-            </DialogDescription>
-          </DialogHeader>
-          {selectedIncident && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {selectedIncident.incidentType.charAt(0).toUpperCase() + selectedIncident.incidentType.slice(1)}
-                  </h3>
-                  <p className="text-sm text-neutral-500">
-                    {selectedIncident.date} • {selectedIncident.location}
-                  </p>
-                </div>
-                <Badge
-                  className={
-                    selectedIncident.status === "resolved"
-                      ? "bg-green-100 text-green-800"
-                      : selectedIncident.status === "under-review"
-                      ? "bg-orange-100 text-orange-800"
-                      : "bg-red-100 text-red-800"
-                  }
-                >
-                  {selectedIncident.status === "resolved"
-                    ? "Resolved"
-                    : selectedIncident.status === "under-review"
-                    ? "Under Review"
-                    : "Pending"}
-                </Badge>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Description</h4>
-                <p className="text-neutral-600 dark:text-neutral-300">
-                  {selectedIncident.description}
-                </p>
-              </div>
-
-              {selectedIncident.contactName && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Contact Information</h4>
-                  <p className="text-neutral-600 dark:text-neutral-300">
-                    {selectedIncident.contactName}
-                    {selectedIncident.contactEmail &&
-                      ` (${selectedIncident.contactEmail})`}
-                  </p>
-                </div>
-              )}
-
-              {selectedIncident.mediaBase64 &&
-                selectedIncident.mediaBase64.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Attached Media</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {selectedIncident.mediaBase64.map((media, index) => (
-                        <div
-                          key={index}
-                          className="relative group cursor-pointer"
-                          onClick={() => setSelectedImage(media)}
-                        >
-                          <img
-                            src={media}
-                            alt={`Media ${index + 1}`}
-                            className="rounded-lg object-cover h-32 w-full"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                            <ZoomIn className="h-8 w-8 text-white" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Social Media Sharing */}
-              <div className="space-y-2">
-                <h4 className="font-medium">Share on Social Media</h4>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => {
-                      const title = `Incident Report: ${selectedIncident?.incidentType}`;
-                      const description = selectedIncident?.description;
-                      const location = selectedIncident?.location;
-                      const hashtags = "#AntiRagging #StudentSafety";
-
-                      console.log(window.location.href);
-                      console.log(title);
-                      console.log(description);
-                      console.log(location);
-                      console.log(hashtags);
-                      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                        window.location.href
-                      )}&quote=${encodeURIComponent(
-                        `${title}\n\n${description}\n\nLocation: ${location}\n\n${hashtags}`
-                      )}`;
-                      console.log(url);
-                      window.open(url, "_blank");
-                    }}
-                  >
-                    <Facebook className="h-4 w-4" />
-                    Facebook
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => {
-                      const title = `Incident Report: ${selectedIncident?.incidentType}`;
-                      const description = selectedIncident?.description;
-                      const location = selectedIncident?.location;
-                      const hashtags = "#AntiRagging #StudentSafety";
-                      const text = `${title}\n\n${description}\n\nLocation: ${location}\n\n${hashtags}`;
-                      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                        text
-                      )}&url=${encodeURIComponent(window.location.href)}`;
-                      window.open(url, "_blank");
-                    }}
-                  >
-                    <Twitter className="h-4 w-4" />
-                    Twitter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    onClick={() => {
-                      const title = `Incident Report: ${selectedIncident?.incidentType}`;
-                      const description = selectedIncident?.description;
-                      const location = selectedIncident?.location;
-                      const summary = `${description}\n\nLocation: ${location}\n\n#AntiRagging #StudentSafety`;
-                      const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                        window.location.href
-                      )}&title=${encodeURIComponent(
-                        title
-                      )}&summary=${encodeURIComponent(summary)}`;
-                      window.open(url, "_blank");
-                    }}
-                  >
-                    <Linkedin className="h-4 w-4" />
-                    LinkedIn
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Image Lightbox */}
-      <Dialog
-        open={!!selectedImage}
-        onOpenChange={() => setSelectedImage(null)}
-      >
-        <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0">
-          <div className="relative">
-            <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute right-4 top-4 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            {selectedImage && (
-              <img
-                src={selectedImage}
-                alt="Enlarged view"
-                className="w-full h-full object-contain max-h-[90vh]"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
       <div className="bg-blue-50 p-6 rounded-lg mt-6">
-        <h2 className="text-lg font-medium text-blue-800 mb-2">
-          Important Note
-        </h2>
+        <h2 className="text-lg font-medium text-blue-800 mb-2">Important Note</h2>
         <p className="text-sm text-blue-700">
-          All incident reports are anonymous and handled with strict
-          confidentiality. The details shown here have been anonymized to
-          protect the identities of all parties involved.
+          All incident reports are anonymous and handled with strict confidentiality. The details shown here have been anonymized to protect the identities of all parties involved.
         </p>
       </div>
     </div>
