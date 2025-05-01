@@ -21,9 +21,18 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /var/www/Anti-Ragging-Support-System
+
           git config --global --add safe.directory /var/www/Anti-Ragging-Support-System
           git reset --hard HEAD
           git pull
+
           npm install
+
+          source ~/.bashrc || true
+          export VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY
+          export VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID
+          export VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
+
           npm run build
+
           pm2 restart anti-rag || pm2 start npm --name "anti-rag" -- start
