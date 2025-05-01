@@ -25,4 +25,4 @@ jobs:
           git pull
           npm install
           npm run build
-          pm2 start dist/server/index.js --name anti-rag || pm2 restart anti-rag
+          pm2 restart anti-rag
