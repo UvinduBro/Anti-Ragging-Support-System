@@ -87,7 +87,7 @@ const Resources = () => {
                   <Phone className="h-5 w-5 text-primary mt-1 mr-3" />
                   <div>
                     <h3 className="font-medium">Anti-Ragging Hotline</h3>
-                    <p>1800-180-5522 (Toll-Free)</p>
+                    <p></p>
                     <p className="text-sm text-gray-500">Available 24/7 for emergency support</p>
                   </div>
                 </div>
@@ -118,8 +118,8 @@ const Resources = () => {
                 <div className="flex items-start">
                   <MapPin className="h-5 w-5 text-primary mt-1 mr-3" />
                   <div>
-                    <h3 className="font-medium">University Counseling Center</h3>
-                    <p>Student Welfare Building, Main Campus</p>
+                    <h3 className="font-medium">Student Counselling Office</h3>
+                    <p>Student Counsellor Office, University of Colombo</p>
                     <p className="text-sm text-gray-500">Confidential counseling services for students</p>
                   </div>
                 </div>
@@ -128,7 +128,7 @@ const Resources = () => {
                   <Mail className="h-5 w-5 text-primary mt-1 mr-3" />
                   <div>
                     <h3 className="font-medium">Email Support</h3>
-                    <p>counseling@university.lk</p>
+                    <p></p>
                     <p className="text-sm text-gray-500">For appointment scheduling and inquiries</p>
                   </div>
                 </div>
@@ -283,15 +283,15 @@ const Resources = () => {
                 <div className="space-y-2">
                   <div className="flex items-center">
                     <Mail className="h-4 w-4 text-primary mr-2" />
-                    <span>info@campus-safety.edu.lk</span>
+                    <span></span>
                   </div>
                   <div className="flex items-center">
                     <Phone className="h-4 w-4 text-primary mr-2" />
-                    <span>+94 11 2123456</span>
+                    <span></span>
                   </div>
                   <div className="flex items-center">
                     <MapPin className="h-4 w-4 text-primary mr-2" />
-                    <span>Student Affairs Division, Main Campus</span>
+                    <span></span>
                   </div>
                 </div>
               </div>

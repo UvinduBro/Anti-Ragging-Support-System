@@ -239,7 +239,7 @@ export default function Home() {
             
             <div className="text-center">
               <p className="font-semibold">
-                Emergency Anti-Ragging Hotline: 011-2695301
+                Emergency Anti-Ragging Hotline: 
               </p>
             </div>
           </div>
