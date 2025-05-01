@@ -1,0 +1,27 @@
+name: Auto Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /var/www/Anti-Ragging-Support-System
+          git pull
+          npm install
+          npm run build
+          pm2 restart anti-rag
