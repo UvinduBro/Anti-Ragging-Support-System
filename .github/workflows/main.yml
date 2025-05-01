@@ -22,6 +22,7 @@ jobs:
         script: |
           cd /var/www/Anti-Ragging-Support-System
           git config --global --add safe.directory /var/www/Anti-Ragging-Support-System
+          git reset --hard HEAD
           git pull
           npm install
           npm run build
