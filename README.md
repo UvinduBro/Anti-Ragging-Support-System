@@ -24,3 +24,22 @@ Ragging is a serious violation of human rights. Our mission is to empower studen
 ```bash
 git clone https://github.com/dularawe/anti-ragging-system.git
 cd anti-ragging-system
+
+```
+
+## 🔧 Deployment Requirements
+
+### Firebase Setup
+
+1. Create a Firebase project
+2. Enable Firestore Database
+3. Create required indexes:
+   - Collection: `reports`
+   - Fields to index:
+     - `status` (Ascending)
+     - `createdAt` (Descending)
+
+You can create the index by visiting this URL (replace PROJECT_ID with your Firebase project ID):
+```
+https://console.firebase.google.com/project/PROJECT_ID/firestore/indexes
+```

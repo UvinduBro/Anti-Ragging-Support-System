@@ -9,6 +9,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import Statistics from "./pages/Statistics";
 import Incidents from "./pages/Incidents";
+import IncidentDetails from "./pages/IncidentDetails";
 import NotFound from "@/pages/not-found";
 import { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -46,6 +47,7 @@ function App() {
         <Route path="/resources" component={Resources} />
         <Route path="/statistics" component={Statistics} />
         <Route path="/incidents" component={Incidents} />
+        <Route path="/incidents/:id" component={IncidentDetails} />
         <Route path="/homelander">
           {isLoggedIn ? <AdminDashboard /> : <AdminLogin />}
         </Route>
