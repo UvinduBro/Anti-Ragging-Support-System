@@ -1,10 +1,11 @@
 export interface Incident {
   id: string;
-  type: string;
+  incidentType: string;
   description: string;
   location: string;
   date: string;
   time?: string;
+  docId: string;
   status: string;
   createdAt?: Date;
   updatedAt?: Date;

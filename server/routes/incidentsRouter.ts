@@ -1,7 +1,13 @@
 import express from "express";
-import { createIncident, getIncidents } from "../app/incidents";
+import { createIncident, getIncidentById, getIncidents } from "../app/incidents";
 
 const router = express.Router();
+
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  const incident = await getIncidentById(id);
+  res.json(incident);
+});
 
 router.get("/", async (req, res) => {
   try {

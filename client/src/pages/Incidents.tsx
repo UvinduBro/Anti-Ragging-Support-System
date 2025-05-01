@@ -11,7 +11,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Search, X, ZoomIn } from "lucide-react";
+import {
+  AlertCircle,
+  Search,
+  X,
+  ZoomIn,
+  Share2,
+  Facebook,
+  Twitter,
+  Linkedin,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +34,7 @@ import apiRequest from "@/api";
 
 type Incident = {
   id: string;
-  type: string;
+  incidentType: string;
   description: string;
   location: string;
   date: string;
@@ -45,7 +54,9 @@ export default function Incidents() {
   const [universityFilter, setUniversityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
+    null
+  );
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -120,7 +131,7 @@ export default function Incidents() {
         incident.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         incident.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesType = typeFilter === "all" || incident.type === typeFilter;
+      const matchesType = typeFilter === "all" || incident.incidentType === typeFilter;
       const matchesUniversity =
         universityFilter === "all" || incident.location === universityFilter;
       const matchesStatus =
@@ -207,46 +218,44 @@ export default function Incidents() {
         {filteredIncidents.length > 0 ? (
           <div className="space-y-4">
             {filteredIncidents.map((incident) => (
-              <Card 
-                key={incident.id} 
-                className="overflow-hidden cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors"
-                onClick={() => setSelectedIncident(incident)}
-              >
-                <CardContent className="p-0">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="p-6 flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
-                            {incident.type}
-                          </h3>
-                          <p className="text-sm text-neutral-500">
-                            {incident.date} • {incident.location}
-                          </p>
-                        </div>
-                        <Badge
-                          className={
-                            incident.status === "resolved"
-                              ? "bg-green-100 text-green-800 hover:bg-green-100"
+              <Link key={incident.id} href={`/incidents/${incident.id}`}>
+                <Card className="overflow-hidden cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
+                  <CardContent className="p-0">
+                    <div className="flex flex-col md:flex-row">
+                      <div className="p-6 flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
+                              {incident.incidentType.charAt(0).toUpperCase() + incident.incidentType.slice(1)}
+                            </h3>
+                            <p className="text-sm text-neutral-500">
+                              {incident.date} • {incident.location}
+                            </p>
+                          </div>
+                          <Badge
+                            className={
+                              incident.status === "resolved"
+                                ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                : incident.status === "under-review"
+                                ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
+                                : "bg-red-100 text-red-800 hover:bg-red-100"
+                            }
+                          >
+                            {incident.status === "resolved"
+                              ? "Resolved"
                               : incident.status === "under-review"
-                              ? "bg-orange-100 text-orange-800 hover:bg-orange-100"
-                              : "bg-red-100 text-red-800 hover:bg-red-100"
-                          }
-                        >
-                          {incident.status === "resolved"
-                            ? "Resolved"
-                            : incident.status === "under-review"
-                            ? "Under Review"
-                            : "Pending"}
-                        </Badge>
+                              ? "Under Review"
+                              : "Pending"}
+                          </Badge>
+                        </div>
+                        <p className="text-neutral-600 dark:text-neutral-300 mt-2">
+                          {incident.description}
+                        </p>
                       </div>
-                      <p className="text-neutral-600 dark:text-neutral-300 mt-2">
-                        {incident.description}
-                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (
@@ -263,7 +272,10 @@ export default function Incidents() {
       </div>
 
       {/* Incident Details Modal */}
-      <Dialog open={!!selectedIncident} onOpenChange={() => setSelectedIncident(null)}>
+      <Dialog
+        open={!!selectedIncident}
+        onOpenChange={() => setSelectedIncident(null)}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Incident Details</DialogTitle>
@@ -275,7 +287,9 @@ export default function Incidents() {
             <div className="space-y-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-semibold">{selectedIncident.type}</h3>
+                  <h3 className="text-lg font-semibold">
+                    {selectedIncident.incidentType.charAt(0).toUpperCase() + selectedIncident.incidentType.slice(1)}
+                  </h3>
                   <p className="text-sm text-neutral-500">
                     {selectedIncident.date} • {selectedIncident.location}
                   </p>
@@ -296,7 +310,7 @@ export default function Incidents() {
                     : "Pending"}
                 </Badge>
               </div>
-              
+
               <div className="space-y-2">
                 <h4 className="font-medium">Description</h4>
                 <p className="text-neutral-600 dark:text-neutral-300">
@@ -309,41 +323,119 @@ export default function Incidents() {
                   <h4 className="font-medium">Contact Information</h4>
                   <p className="text-neutral-600 dark:text-neutral-300">
                     {selectedIncident.contactName}
-                    {selectedIncident.contactEmail && ` (${selectedIncident.contactEmail})`}
+                    {selectedIncident.contactEmail &&
+                      ` (${selectedIncident.contactEmail})`}
                   </p>
                 </div>
               )}
 
-              {selectedIncident.mediaBase64 && selectedIncident.mediaBase64.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Attached Media</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedIncident.mediaBase64.map((media, index) => (
-                      <div 
-                        key={index} 
-                        className="relative group cursor-pointer"
-                        onClick={() => setSelectedImage(media)}
-                      >
-                        <img
-                          src={media}
-                          alt={`Media ${index + 1}`}
-                          className="rounded-lg object-cover h-32 w-full"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                          <ZoomIn className="h-8 w-8 text-white" />
+              {selectedIncident.mediaBase64 &&
+                selectedIncident.mediaBase64.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Attached Media</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedIncident.mediaBase64.map((media, index) => (
+                        <div
+                          key={index}
+                          className="relative group cursor-pointer"
+                          onClick={() => setSelectedImage(media)}
+                        >
+                          <img
+                            src={media}
+                            alt={`Media ${index + 1}`}
+                            className="rounded-lg object-cover h-32 w-full"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <ZoomIn className="h-8 w-8 text-white" />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+                )}
+
+              {/* Social Media Sharing */}
+              <div className="space-y-2">
+                <h4 className="font-medium">Share on Social Media</h4>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      const title = `Incident Report: ${selectedIncident?.incidentType}`;
+                      const description = selectedIncident?.description;
+                      const location = selectedIncident?.location;
+                      const hashtags = "#AntiRagging #StudentSafety";
+
+                      console.log(window.location.href);
+                      console.log(title);
+                      console.log(description);
+                      console.log(location);
+                      console.log(hashtags);
+                      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                        window.location.href
+                      )}&quote=${encodeURIComponent(
+                        `${title}\n\n${description}\n\nLocation: ${location}\n\n${hashtags}`
+                      )}`;
+                      console.log(url);
+                      window.open(url, "_blank");
+                    }}
+                  >
+                    <Facebook className="h-4 w-4" />
+                    Facebook
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      const title = `Incident Report: ${selectedIncident?.incidentType}`;
+                      const description = selectedIncident?.description;
+                      const location = selectedIncident?.location;
+                      const hashtags = "#AntiRagging #StudentSafety";
+                      const text = `${title}\n\n${description}\n\nLocation: ${location}\n\n${hashtags}`;
+                      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                        text
+                      )}&url=${encodeURIComponent(window.location.href)}`;
+                      window.open(url, "_blank");
+                    }}
+                  >
+                    <Twitter className="h-4 w-4" />
+                    Twitter
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      const title = `Incident Report: ${selectedIncident?.incidentType}`;
+                      const description = selectedIncident?.description;
+                      const location = selectedIncident?.location;
+                      const summary = `${description}\n\nLocation: ${location}\n\n#AntiRagging #StudentSafety`;
+                      const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                        window.location.href
+                      )}&title=${encodeURIComponent(
+                        title
+                      )}&summary=${encodeURIComponent(summary)}`;
+                      window.open(url, "_blank");
+                    }}
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    LinkedIn
+                  </Button>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Image Lightbox */}
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+      <Dialog
+        open={!!selectedImage}
+        onOpenChange={() => setSelectedImage(null)}
+      >
         <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-0">
           <div className="relative">
             <button

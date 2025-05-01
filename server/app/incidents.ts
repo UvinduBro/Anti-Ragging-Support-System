@@ -13,9 +13,12 @@ import {
   updateDoc,
   serverTimestamp,
   FieldValue,
+  getDoc,
+  doc,
 } from "firebase/firestore";
 import { uploadBytes, uploadBytesResumable } from "firebase/storage";
 import { Incident } from "server/types/incident.type";
+import { v4 as uuidv4 } from "uuid";
 
 interface ReportData {
   incidentType: string;
@@ -96,6 +99,7 @@ const createIncident = async (incident: Incident) => {
       location,
       date,
       description,
+      docId: `INC-${uuidv4().slice(0, 8).toUpperCase()}`,
       status: "pending",
       mediaBase64: mediaBase64 ?? [],
       createdAt: new Date().toISOString(),
@@ -119,4 +123,24 @@ const createIncident = async (incident: Incident) => {
   }
 };
 
-export { getIncidents, createIncident };
+const getIncidentById = async (id: string) => {
+  try {
+    const db = getFirebaseFirestore();
+    const docRef = doc(db, "reports", id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return { success: true, data: docSnap.data() };
+    } else {
+      return { success: false, message: "Incident not found" };
+    }
+  } catch (err: any) {
+    console.error("Error fetching incident by ID:", err);
+    return {
+      success: false,
+      message: "Failed to fetch incident by ID",
+    };
+  }
+};
+
+export { getIncidents, createIncident, getIncidentById };
