@@ -119,7 +119,7 @@ const checkAdminStatus = async (uid) => {
 3. Add the environment variables mentioned above.
 4. Deploy your application.
 
-After deployment, your admin can log in through the `/admin` route using the credentials you created in Firebase Authentication.
+After deployment, your admin can log in through the `/homelander` route using the credentials you created in Firebase Authentication.
 
 ## Troubleshooting
 

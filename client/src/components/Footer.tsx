@@ -39,7 +39,7 @@ const Footer = () => {
               <li><Link href="/report" className="hover:underline">Report Incident</Link></li>
               <li><Link href="/awareness" className="hover:underline">Awareness Resources</Link></li>
               <li><Link href="/legal" className="hover:underline">Legal Information</Link></li>
-              <li><a href="https://www.ugc.ac.in/page/Ragging-Related-Circulars.aspx" target="_blank" rel="noopener noreferrer" className="hover:underline">UGC Anti-Ragging Portal</a></li>
+              <li><Link href="/resources" className="hover:underline">Support Resources</Link></li>
             </ul>
           </div>
         </div>

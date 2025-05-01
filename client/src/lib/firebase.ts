@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 let firebaseApp: any = null;
 let firebaseInitialized = false;
@@ -39,4 +40,11 @@ export const getFirebaseFirestore = () => {
     initializeFirebase();
   }
   return getFirestore();
+};
+
+export const getFirebaseStorage = () => {
+  if (!firebaseInitialized) {
+    initializeFirebase();
+  }
+  return getStorage();
 };

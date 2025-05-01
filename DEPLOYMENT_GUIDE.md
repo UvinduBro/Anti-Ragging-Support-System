@@ -30,7 +30,18 @@ Before deploying, make sure you have the following Firebase configuration values
 - Firebase Project ID
 - Firebase App ID
 
-These were configured as environment variables in your development environment.
+You have two ways to manage environment variables:
+
+### Option 1: Using the .env file (Development Only)
+1. The project includes an `.env.example` file showing the required variables
+2. There's also an empty `.env` file where you can add your actual values for local development
+3. **Important**: This `.env` file should never be committed to your repository - it contains sensitive information
+
+### Option 2: Using Vercel Environment Variables (Recommended for Production)
+1. The `.env` file is for local development only
+2. For production, you'll set these values directly in Vercel (see Step 3)
+
+**Note**: The `.env` file is automatically included in `.gitignore` to prevent accidentally exposing your API keys.
 
 ## Step 3: Deploy to Vercel
 

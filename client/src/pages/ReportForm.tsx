@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { getFirebaseFirestore } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirebaseFirestore, getFirebaseStorage } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import SuccessModal from "@/components/SuccessModal";
 import {
@@ -13,12 +14,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { AlertCircle, FileImage, Upload, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg", 
+  "image/jpg", 
+  "image/png", 
+  "image/webp"
+];
 
 const formSchema = z.object({
   incidentType: z.string({
@@ -37,6 +49,8 @@ const formSchema = z.object({
   optionalContact: z.boolean().default(false),
   contactName: z.string().optional(),
   contactEmail: z.string().email("Invalid email address").optional(),
+  contactPhone: z.string().optional(),
+  mediaFiles: z.any().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,6 +59,10 @@ const ReportForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileUploadError, setFileUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -57,20 +75,91 @@ const ReportForm = () => {
       optionalContact: false,
       contactName: "",
       contactEmail: "",
+      contactPhone: "",
+      mediaFiles: undefined,
     },
   });
 
   const showOptionalContact = form.watch("optionalContact");
 
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileUploadError(null);
+    const files = e.target.files;
+    
+    if (!files || files.length === 0) return;
+    
+    // Validate file types and sizes
+    const newFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        setFileUploadError("Only images (JPEG, PNG, WebP) are accepted");
+        return;
+      }
+      
+      if (file.size > MAX_FILE_SIZE) {
+        setFileUploadError("File size must be less than 5MB");
+        return;
+      }
+      
+      newFiles.push(file);
+    }
+    
+    // Add the new files to selected files
+    setSelectedFiles(prev => [...prev, ...newFiles]);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  
+  // Remove file from selection
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: FormValues) => {
     try {
       setIsSubmitting(true);
+      setFileUploadError(null);
       const db = getFirebaseFirestore();
+      
+      // Upload media files if any and get URLs
+      let mediaURLs: string[] = [];
+      
+      if (selectedFiles.length > 0) {
+        try {
+          const storage = getFirebaseStorage();
+          
+          for (const file of selectedFiles) {
+            // Create a reference to the file in Firebase Storage
+            const fileRef = ref(storage, `report-media/${Date.now()}-${file.name}`);
+            
+            // Upload the file
+            await uploadBytes(fileRef, file);
+            
+            // Get download URL
+            const downloadURL = await getDownloadURL(fileRef);
+            mediaURLs.push(downloadURL);
+          }
+        } catch (error) {
+          console.error("Error uploading files:", error);
+          toast({
+            title: "Upload Error",
+            description: "There was an error uploading your media files. Your report will be submitted without media.",
+            variant: "destructive",
+          });
+        }
+      }
       
       // Only include contact info if the user opted in
       const reportData = {
         ...data,
         status: "pending",
+        mediaURLs: mediaURLs.length > 0 ? mediaURLs : null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -79,11 +168,16 @@ const ReportForm = () => {
       if (!data.optionalContact) {
         delete reportData.contactName;
         delete reportData.contactEmail;
+        delete reportData.contactPhone;
       }
+      
+      // Remove the mediaFiles property as we're using mediaURLs
+      delete reportData.mediaFiles;
       
       await addDoc(collection(db, "reports"), reportData);
       
       setShowSuccess(true);
+      setSelectedFiles([]);
       form.reset();
     } catch (error) {
       console.error("Error submitting report:", error);
@@ -247,7 +341,7 @@ const ReportForm = () => {
               {showOptionalContact && (
                 <div className="p-4 border border-neutral-200 rounded-md bg-neutral-100 space-y-4">
                   <p className="text-sm">This information is completely optional and will only be visible to authorized administrators:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={form.control}
                       name="contactName"
@@ -262,22 +356,114 @@ const ReportForm = () => {
                       )}
                     />
                     
-                    <FormField
-                      control={form.control}
-                      name="contactEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="contactEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="contactPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="+94 XX XXX XXXX" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
+              
+              {/* Media Upload Section */}
+              <FormField
+                name="mediaFiles"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Upload Images (Optional)</FormLabel>
+                    <FormDescription>
+                      You can upload images related to the incident. Max size: 5MB per file.
+                    </FormDescription>
+                    
+                    <div className="mt-2">
+                      <div className="flex items-center gap-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          <span>Add Images</span>
+                        </Button>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          multiple
+                          onChange={handleFileChange}
+                        />
+                        
+                        <div className="text-sm text-muted-foreground">
+                          Supported formats: JPEG, PNG, WebP
+                        </div>
+                      </div>
+                      
+                      {fileUploadError && (
+                        <Alert variant="destructive" className="mt-2">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {fileUploadError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {selectedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-neutral-50">
+                              <div className="flex items-center gap-2">
+                                <FileImage className="h-4 w-4 text-primary" />
+                                <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => removeFile(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="flex items-center justify-between pt-2">
                 <Button 
@@ -290,7 +476,11 @@ const ReportForm = () => {
                 <Button 
                   type="button" 
                   variant="ghost"
-                  onClick={() => form.reset()}
+                  onClick={() => {
+                    form.reset();
+                    setSelectedFiles([]);
+                    setFileUploadError(null);
+                  }}
                   disabled={isSubmitting}
                 >
                   Clear Form

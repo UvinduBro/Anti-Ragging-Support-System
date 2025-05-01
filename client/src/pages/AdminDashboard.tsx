@@ -8,7 +8,10 @@ import {
   getDocs, 
   where, 
   onSnapshot, 
-  Timestamp 
+  Timestamp,
+  updateDoc,
+  doc,
+  serverTimestamp
 } from "firebase/firestore";
 import { getFirebaseFirestore } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -47,21 +50,35 @@ interface Report {
   notes?: Array<{ text: string; timestamp: Timestamp }>;
 }
 
+interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'unread' | 'read';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 const AdminDashboard = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
+  const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState<'reports' | 'contacts'>('reports');
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     underReview: 0,
-    resolved: 0
+    resolved: 0,
+    unreadContacts: 0
   });
   const [categoryData, setCategoryData] = useState<Array<{name: string; value: number}>>([]);
   const [timeData, setTimeData] = useState<Array<{name: string; reports: number}>>([]);
@@ -72,9 +89,9 @@ const AdminDashboard = () => {
     const db = getFirebaseFirestore();
     
     // Set up real-time listener for reports
-    const q = query(collection(db, "reports"), orderBy("createdAt", "desc"));
+    const reportsQuery = query(collection(db, "reports"), orderBy("createdAt", "desc"));
     
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const reportsUnsubscribe = onSnapshot(reportsQuery, (querySnapshot) => {
       const fetchedReports: Report[] = [];
       
       querySnapshot.forEach((doc) => {
@@ -86,17 +103,10 @@ const AdminDashboard = () => {
       
       setReports(fetchedReports);
       
-      // Calculate stats
+      // Calculate reports stats
       const pendingCount = fetchedReports.filter(r => r.status === "pending").length;
       const underReviewCount = fetchedReports.filter(r => r.status === "under-review").length;
       const resolvedCount = fetchedReports.filter(r => r.status === "resolved").length;
-      
-      setStats({
-        total: fetchedReports.length,
-        pending: pendingCount,
-        underReview: underReviewCount,
-        resolved: resolvedCount
-      });
       
       // Prepare category data for pie chart
       const typeCounts: {[key: string]: number} = {};
@@ -137,7 +147,44 @@ const AdminDashboard = () => {
       setTimeData(timeChartData);
     });
     
-    return () => unsubscribe();
+    // Set up real-time listener for contact submissions
+    const contactsQuery = query(collection(db, "contactSubmissions"), orderBy("createdAt", "desc"));
+    
+    const contactsUnsubscribe = onSnapshot(contactsQuery, (querySnapshot) => {
+      const fetchedContacts: ContactSubmission[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        fetchedContacts.push({
+          id: doc.id,
+          ...doc.data(),
+        } as ContactSubmission);
+      });
+      
+      setContactSubmissions(fetchedContacts);
+      
+      // Count unread contacts
+      const unreadCount = fetchedContacts.filter(c => c.status === "unread").length;
+      
+      // Get the latest report stats from previous state
+      const reportsStats = {
+        total: reports.length,
+        pending: reports.filter(r => r.status === "pending").length,
+        underReview: reports.filter(r => r.status === "under-review").length,
+        resolved: reports.filter(r => r.status === "resolved").length
+      };
+      
+      // Update stats with both reports and contacts data
+      setStats(prevStats => ({
+        ...prevStats,
+        ...reportsStats,
+        unreadContacts: unreadCount
+      }));
+    });
+    
+    return () => {
+      reportsUnsubscribe();
+      contactsUnsubscribe();
+    };
   }, []);
   
   useEffect(() => {
@@ -174,7 +221,7 @@ const AdminDashboard = () => {
         description: "You have been successfully logged out",
       });
       
-      navigate("/admin");
+      navigate("/homelander");
     } catch (error) {
       console.error("Logout error:", error);
       toast({
@@ -238,6 +285,37 @@ const AdminDashboard = () => {
             </Button>
           </div>
           
+          {/* Dashboard Tabs */}
+          <div className="mb-6 border-b border-gray-200">
+            <div className="flex">
+              <button
+                className={`py-2 px-4 font-medium text-sm focus:outline-none ${
+                  activeTab === 'reports'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setActiveTab('reports')}
+              >
+                Incident Reports
+              </button>
+              <button
+                className={`py-2 px-4 font-medium text-sm focus:outline-none ${
+                  activeTab === 'contacts'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-500 hover:text-gray-700'
+                } flex items-center`}
+                onClick={() => setActiveTab('contacts')}
+              >
+                Contact Messages
+                {stats.unreadContacts > 0 && (
+                  <span className="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {stats.unreadContacts}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <StatCard 
@@ -267,7 +345,7 @@ const AdminDashboard = () => {
           </div>
           
           {/* Incident Reports Management */}
-          <div className="mb-6">
+          <div className={`mb-6 ${activeTab !== 'reports' ? 'hidden' : ''}`}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
               <h2 className="text-xl font-medium mb-2 md:mb-0">Incident Reports</h2>
               <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -380,8 +458,128 @@ const AdminDashboard = () => {
             </div>
           </div>
           
-          {/* Statistics Charts */}
-          <div>
+          {/* Contact Submissions Tab */}
+          <div className={`mb-6 ${activeTab !== 'contacts' ? 'hidden' : ''}`}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-medium">Contact Messages</h2>
+            </div>
+            
+            {/* Contacts Table */}
+            <div className="overflow-x-auto border border-neutral-200 rounded-md">
+              <table className="min-w-full divide-y divide-neutral-200">
+                <thead className="bg-neutral-100">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">Subject</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-neutral-200">
+                  {contactSubmissions.length > 0 ? (
+                    contactSubmissions.map((contact) => (
+                      <tr key={contact.id} className={`hover:bg-neutral-50 ${contact.status === 'unread' ? 'bg-blue-50' : ''}`}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {contact.createdAt ? new Date(contact.createdAt.toDate()).toLocaleString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{contact.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <a href={`mailto:${contact.email}`} className="text-primary hover:underline">
+                            {contact.email}
+                          </a>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">{contact.subject}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            contact.status === 'unread' 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {contact.status === 'unread' ? 'Unread' : 'Read'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <Button 
+                            variant="link" 
+                            className="text-primary hover:text-indigo-700 p-0 h-auto mr-2" 
+                            onClick={() => {
+                              // Show contact details
+                              toast({
+                                title: contact.subject,
+                                description: contact.message,
+                                duration: 10000,
+                              });
+                              
+                              // Mark as read if unread
+                              if (contact.status === 'unread') {
+                                const db = getFirebaseFirestore();
+                                updateDoc(doc(db, "contactSubmissions", contact.id), {
+                                  status: "read",
+                                  updatedAt: serverTimestamp()
+                                }).then(() => {
+                                  toast({
+                                    title: "Message marked as read",
+                                    description: "The message has been marked as read",
+                                  });
+                                }).catch(error => {
+                                  console.error("Error updating contact:", error);
+                                  toast({
+                                    title: "Error updating contact",
+                                    description: "There was an error marking the message as read",
+                                    variant: "destructive",
+                                  });
+                                });
+                              }
+                            }}
+                          >
+                            View
+                          </Button>
+                          {contact.status === 'unread' && (
+                            <Button
+                              variant="link"
+                              className="text-green-600 hover:text-green-800 p-0 h-auto"
+                              onClick={() => {
+                                const db = getFirebaseFirestore();
+                                updateDoc(doc(db, "contactSubmissions", contact.id), {
+                                  status: "read",
+                                  updatedAt: serverTimestamp()
+                                }).then(() => {
+                                  toast({
+                                    title: "Message marked as read",
+                                    description: "The message has been marked as read",
+                                  });
+                                }).catch(error => {
+                                  console.error("Error updating contact:", error);
+                                  toast({
+                                    title: "Error updating contact",
+                                    description: "There was an error marking the message as read",
+                                    variant: "destructive",
+                                  });
+                                });
+                              }}
+                            >
+                              Mark as Read
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                        No contact submissions have been received yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          {/* Statistics Charts - Only shown on reports tab */}
+          <div className={activeTab !== 'reports' ? 'hidden' : ''}>
             <h2 className="text-xl font-medium mb-4">Analytics</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="border border-neutral-200 rounded-md p-4">

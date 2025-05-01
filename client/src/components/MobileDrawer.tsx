@@ -79,13 +79,14 @@ const MobileDrawer = ({ isOpen, closeDrawer }: MobileDrawerProps) => {
           </li>
           <li>
             <Link 
-              href="/admin" 
+              href="/resources" 
               onClick={closeDrawer}
               className="block py-2 hover:bg-neutral-100 transition-colors duration-200"
             >
-              Admin
+              Support Resources
             </Link>
           </li>
+
         </ul>
       </nav>
     </div>

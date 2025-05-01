@@ -75,11 +75,11 @@ export default function Home() {
       {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Anonymous Reporting Card */}
-        <Card className="border-t-4 border-primary">
-          <CardContent className="p-6">
-            <div className="flex items-center mb-4">
-              <div className="rounded-full bg-primary-light p-3 mr-4">
-                <KeyRound className="text-white h-5 w-5" />
+        <Card className="border border-primary rounded-lg overflow-hidden">
+          <CardContent className="p-6 flex flex-col items-center text-center">
+            <div className="mb-4 text-center">
+              <div className="inline-block mb-2">
+                <Shield className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold text-neutral-800 dark:text-neutral-100">
                 Anonymous Reporting
@@ -89,7 +89,7 @@ export default function Home() {
               Report incidents without revealing your identity. Your safety and
               privacy are our top priorities.
             </p>
-            <Link href="/report">
+            <Link href="/report" className="mt-auto">
               <Button variant="link" className="text-primary hover:text-primary-dark dark:text-primary dark:hover:text-primary-light p-0">
                 File a report <span className="ml-2">→</span>
               </Button>
@@ -98,11 +98,11 @@ export default function Home() {
         </Card>
 
         {/* Awareness Card */}
-        <Card className="border-t-4 border-secondary">
-          <CardContent className="p-6">
-            <div className="flex items-center mb-4">
-              <div className="rounded-full bg-secondary-light p-3 mr-4">
-                <BookOpen className="text-white h-5 w-5" />
+        <Card className="border border-secondary rounded-lg overflow-hidden">
+          <CardContent className="p-6 flex flex-col items-center text-center">
+            <div className="mb-4 text-center">
+              <div className="inline-block mb-2">
+                <BookOpen className="h-6 w-6 text-secondary" />
               </div>
               <h3 className="text-xl font-semibold text-neutral-800 dark:text-neutral-100">
                 Awareness Resources
@@ -112,7 +112,7 @@ export default function Home() {
               Learn about anti-ragging laws, what constitutes ragging, and how to
               stay safe on campus.
             </p>
-            <Link href="/awareness">
+            <Link href="/awareness" className="mt-auto">
               <Button variant="link" className="text-secondary hover:text-secondary-dark dark:text-secondary dark:hover:text-secondary-light p-0">
                 Explore resources <span className="ml-2">→</span>
               </Button>
@@ -121,11 +121,11 @@ export default function Home() {
         </Card>
 
         {/* Support Card */}
-        <Card className="border-t-4 border-accent">
-          <CardContent className="p-6">
-            <div className="flex items-center mb-4">
-              <div className="rounded-full bg-accent-light p-3 mr-4">
-                <HandHeart className="text-white h-5 w-5" />
+        <Card className="border border-accent rounded-lg overflow-hidden">
+          <CardContent className="p-6 flex flex-col items-center text-center">
+            <div className="mb-4 text-center">
+              <div className="inline-block mb-2">
+                <HandHeart className="h-6 w-6 text-accent" />
               </div>
               <h3 className="text-xl font-semibold text-neutral-800 dark:text-neutral-100">
                 Support & Help
@@ -135,7 +135,7 @@ export default function Home() {
               Access helplines, counseling services, and legal assistance for
               victims of ragging or rights violations.
             </p>
-            <Link href="/resources">
+            <Link href="/resources" className="mt-auto">
               <Button variant="link" className="text-accent hover:text-accent-dark dark:text-accent dark:hover:text-accent-light p-0">
                 Get help <span className="ml-2">→</span>
               </Button>

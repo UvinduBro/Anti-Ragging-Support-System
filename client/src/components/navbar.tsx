@@ -10,8 +10,8 @@ import {
 import { Shield, Menu, X, LogOut } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { signOut } from "@/lib/firebase";
-import { useMobile } from "@/hooks/use-mobile";
+import { getAuth, signOut } from "firebase/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavbarProps {
   isAdmin: boolean;
@@ -22,12 +22,13 @@ export function Navbar({ isAdmin, onAdminLogin }: NavbarProps) {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      const auth = getAuth();
+      await signOut(auth);
       queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
       toast({
         title: "Logged out successfully",
@@ -101,32 +102,14 @@ export function Navbar({ isAdmin, onAdminLogin }: NavbarProps) {
         </a>
       </Link>
 
-      {isAdmin ? (
-        <>
-          <Link href="/admin/dashboard">
-            <Button
-              variant="secondary"
-              className="ml-4"
-            >
-              Admin Dashboard
-            </Button>
-          </Link>
-          <Button
-            variant="ghost"
-            className="ml-2 bg-primary-dark text-white hover:bg-primary-light"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </>
-      ) : (
+      {isAdmin && (
         <Button
-          variant="secondary"
-          className="ml-4"
-          onClick={onAdminLogin}
+          variant="ghost"
+          className="ml-2 bg-primary-dark text-white hover:bg-primary-light"
+          onClick={handleLogout}
         >
-          Admin Login
+          <LogOut className="h-4 w-4 mr-2" />
+          Logout
         </Button>
       )}
     </>
@@ -233,35 +216,15 @@ export function Navbar({ isAdmin, onAdminLogin }: NavbarProps) {
                 Statistics
               </a>
             </Link>
-            {isAdmin ? (
-              <>
-                <Link href="/admin/dashboard">
-                  <a
-                    className="mt-2 w-full block px-4 py-2 rounded-md text-sm font-medium bg-white text-primary hover:bg-neutral-100 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Admin Dashboard
-                  </a>
-                </Link>
-                <button
-                  className="mt-2 w-full px-4 py-2 rounded-md text-sm font-medium bg-primary-dark text-white hover:bg-primary-light transition-colors border border-white"
-                  onClick={() => {
-                    handleLogout();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
+            {isAdmin && (
               <button
-                className="mt-2 w-full px-4 py-2 rounded-md text-sm font-medium bg-white text-primary hover:bg-neutral-100 transition-colors"
+                className="mt-2 w-full px-4 py-2 rounded-md text-sm font-medium bg-primary-dark text-white hover:bg-primary-light transition-colors border border-white"
                 onClick={() => {
-                  onAdminLogin();
+                  handleLogout();
                   setIsMenuOpen(false);
                 }}
               >
-                Admin Login
+                Logout
               </button>
             )}
           </div>

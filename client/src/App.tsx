@@ -4,6 +4,7 @@ import Home from "./pages/home";
 import ReportForm from "./pages/ReportForm";
 import Awareness from "./pages/Awareness";
 import LegalResources from "./pages/LegalResources";
+import Resources from "./pages/resources";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import Statistics from "./pages/Statistics";
@@ -42,12 +43,13 @@ function App() {
         <Route path="/report" component={ReportForm} />
         <Route path="/awareness" component={Awareness} />
         <Route path="/legal" component={LegalResources} />
+        <Route path="/resources" component={Resources} />
         <Route path="/statistics" component={Statistics} />
         <Route path="/incidents" component={Incidents} />
-        <Route path="/admin">
+        <Route path="/homelander">
           {isLoggedIn ? <AdminDashboard /> : <AdminLogin />}
         </Route>
-        <Route path="/admin/dashboard">
+        <Route path="/homelander/dashboard">
           {isLoggedIn ? <AdminDashboard /> : <AdminLogin />}
         </Route>
         <Route component={NotFound} />

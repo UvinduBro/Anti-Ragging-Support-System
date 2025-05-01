@@ -77,14 +77,7 @@ const Header = ({ toggleDrawer }: HeaderProps) => {
                   Legal
                 </Link>
               </li>
-              <li>
-                <Link 
-                  href="/admin" 
-                  className={`hover:text-neutral-200 transition-colors duration-200 ${location === '/admin' || location === '/admin/dashboard' ? 'font-medium' : ''}`}
-                >
-                  Admin
-                </Link>
-              </li>
+
             </ul>
           </nav>
         </div>

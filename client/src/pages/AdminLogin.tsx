@@ -52,7 +52,7 @@ const AdminLogin = () => {
         description: "Welcome to the admin dashboard",
       });
       
-      navigate("/admin/dashboard");
+      navigate("/homelander/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
       
